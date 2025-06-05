@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^22.15.29"
+    "@types/node": "^22.15.29",
+    "cheerio": "^1.0.0",
+    "download": "^8.0.0"
   }
 }

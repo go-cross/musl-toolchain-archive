@@ -1,0 +1,56 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      musl_url:
+        description: "The URL of the musl.cc website"
+        required: true
+        default: "https://musl.cc"
+
+jobs:
+  release:
+    name: "Build updater"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Sync node version and setup cache
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+          # cache: "pnpm" # Set this to npm, yarn or pnpm.
+
+      - name: Download musl toolchain files
+        run: |
+          pnpm install
+          npx tsx ./main.ts
+        env:
+          MUSL_URL: ${{ inputs.musl_url }}
+
+      - name: Generate tag form date
+        run: |
+          # format: 2025.06.05
+          tag=$(date +%Y.%m.%d)
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+        id: tag
+      
+      - name: Create the tag
+        uses: rickstaa/action-create-tag@v1
+        id: "tag_create"
+        with:
+          tag: "${{ steps.tag.outputs.tag }}"
+          tag_exists_error: false
+
+      - name: Upload musl toolchain files
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          tag_name: "${{ steps.tag.outputs.tag }}"
+          files: |
+            files/*
