@@ -11,6 +11,8 @@ jobs:
   release:
     name: "Build updater"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -25,15 +27,8 @@ jobs:
         with:
           node-version: "lts/*"
           # cache: "pnpm" # Set this to npm, yarn or pnpm.
-
-      - name: Download musl toolchain files
-        run: |
-          pnpm install
-          npx tsx ./main.ts
-        env:
-          MUSL_URL: ${{ inputs.musl_url }}
-
-      - name: Generate tag form date
+      
+      - name: Generate tag from date
         run: |
           # format: 2025.06.05
           tag=$(date +%Y.%m.%d)
@@ -46,6 +41,13 @@ jobs:
         with:
           tag: "${{ steps.tag.outputs.tag }}"
           tag_exists_error: false
+
+      - name: Download musl toolchain files
+        run: |
+          pnpm install
+          npx tsx ./main.ts
+        env:
+          MUSL_URL: ${{ inputs.musl_url }}
 
       - name: Upload musl toolchain files
         uses: softprops/action-gh-release@v2
